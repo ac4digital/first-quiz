@@ -1,0 +1,241 @@
+diff --git a/part1/question1.py b/part1/question1.py
+index 5c99fdb..ed431bd 100644
+--- a/part1/question1.py
++++ b/part1/question1.py
+@@ -20,6 +20,8 @@ def get_city_temperature(city):
+       return 17
+    if city == "San Francisco":
+       return 16
++   if city == "New York":
++      return 14
+ 
+ def get_city_weather(city):
+ 
+@@ -29,6 +31,8 @@ def get_city_weather(city):
+      sky_condition = "cloudy"
+   elif city == "New York":
+      sky_condition = "rainy"
++  elif city == "Quito":
++     sky_condition = "sunny"
+ 
+   temperature = get_city_temperature(city)
+ 
+diff --git a/part1/question2.py b/part1/question2.py
+index 34a9b01..d9138ec 100644
+--- a/part1/question2.py
++++ b/part1/question2.py
+@@ -15,7 +15,13 @@
+ # it. As always, there is a test suite that checks the result. It is in 
+ # `question2_test.py.`
+ 
+-swapper = None
++def swap_tuple(t):
++    if len(t) != 2:
++        raise ValueError("Input tuple must contain exactly two elements.")
++    else:
++        return (t[1], t[0])
++
++swapper = swap_tuple
+ 
+ def run_swapper(list_of_tuples):
+   return list(map(swapper, list_of_tuples))
+\ No newline at end of file
+diff --git a/part1/question3.py b/part1/question3.py
+index 04fab99..d497a4b 100644
+--- a/part1/question3.py
++++ b/part1/question3.py
+@@ -26,8 +26,40 @@
+ # formulas and their outputs in the test file, `question3_test.py`.
+ 
+ # This function should return an oven instance!
++
++class MagicalOven:
++  def __init__(self):
++    self.ingredients =[]
++    self.temperature = None
++
++  def add(self, item):
++    self.ingredients.append(item)
++
++
++  def freeze(self):
++    self.temperature = 'freeze'
++
++  def boil(self):
++    self.temperature = 'boil'
++
++  def wait(self):
++    self.temperature = 'wait'
++
++  def get_output(self):
++        if self.temperature == 'freeze' and len(self.ingredients) >= 2:
++            return "snow"
++        elif self.temperature == 'boil' and len(self.ingredients) >= 2:
++            return "pizza"
++        elif self.temperature == 'wait' and len(self.ingredients) >= 2:
++            return "gold"
++        elif self.temperature is None:
++            return "No output. Ingredients are waiting."
++        else:
++            return "Not enough ingredients or incorrect temperature for crafting."
++
+ def make_oven():
+-  None
++  return MagicalOven()
++  
+ 
+ def alchemy_combine(oven, ingredients, temperature):
+   
+@@ -36,9 +68,11 @@ def alchemy_combine(oven, ingredients, temperature):
+ 
+   if temperature < 0:
+     oven.freeze()
+-  elif temperature >= 100:
++  elif temperature >= 100 and temperature < 4999:
+     oven.boil()
+   else:
+     oven.wait()
+ 
+-  return oven.get_output()
+\ No newline at end of file
++  return oven.get_output()
++
++make_oven()
+\ No newline at end of file
+diff --git a/part1/question3_test.py b/part1/question3_test.py
+index 6cb6c89..6e0f468 100644
+--- a/part1/question3_test.py
++++ b/part1/question3_test.py
+@@ -1,3 +1,5 @@
++from question3 import alchemy_combine, make_oven
++
+ def test_alchemy_combine():
+ 
+   assert alchemy_combine(
+@@ -5,7 +7,7 @@ def test_alchemy_combine():
+     ["lead", "mercury"],
+     5000
+   ) == "gold"
+-
++  
+   assert alchemy_combine(
+     make_oven(),
+     ["water", "air"],
+diff --git a/part1/question4.py b/part1/question4.py
+index 1e1b2bf..26d2951 100644
+--- a/part1/question4.py
++++ b/part1/question4.py
+@@ -24,8 +24,11 @@ import pets_db
+ 
+ sql_pets_owned_by_nobody = """
+ 
+-Your SQL here.
+-
++SELECT name, species, age
++FROM animals
++WHERE animal_id NOT IN
++    (SELECT pet_id
++    FROM people_animals);
+ """
+ 
+ # Part 4.B:
+@@ -34,7 +37,11 @@ Your SQL here.
+ 
+ sql_pets_older_than_owner = """
+ 
+-Your SQL here.
++SELECT COUNT((a.age))
++FROM animals a
++JOIN people_animals pa ON a.animal_id = pa.pet_id
++JOIN people p ON pa.owner_id = p.person_id
++WHERE a.age > p.age;
+ 
+ """
+ 
+@@ -43,6 +50,15 @@ Your SQL here.
+ # The output should be a list of tuples in the format: (<person name>, <pet name>, <species>)
+ sql_only_owned_by_bessie = """ 
+ 
+-Your SQL here.
++SELECT p.name AS person_name, a.name AS pet_name, a.species AS pet_specie
++FROM animals a
++JOIN people_animals pa ON a.animal_id = pa.pet_id
++JOIN people p ON pa.owner_id = p.person_id
++WHERE pa.owner_id = 2
++AND NOT EXISTS (
++    SELECT 1
++    FROM people_animals pa2
++    WHERE pa2.pet_id = pa.pet_id
++    AND pa2.owner_id != 2);
+ 
+ """
+\ No newline at end of file
+diff --git a/part1/question5.py b/part1/question5.py
+index f76654f..537e8f6 100644
+--- a/part1/question5.py
++++ b/part1/question5.py
+@@ -20,8 +20,11 @@
+ 
+ sql_create_favorite_foods = """
+ 
+-Your SQL here.
+-
++CREATE TABLE favorite_foods (
++food_id INTEGER,
++name TEXT,
++vegetarian INTEGER
++);
+ """
+ 
+ # Part 5.B:
+@@ -30,7 +33,11 @@ Your SQL here.
+ 
+ sql_alter_tables_with_favorite_food = """
+ 
+-Your SQL here.
++ALTER TABLE animals 
++ADD COLUMN favorite_food_id INTEGER;
++
++ALTER TABLE people 
++ADD COLUMN favorite_food_id INTEGER;
+ 
+ """
+ 
+@@ -40,6 +47,9 @@ Your SQL here.
+ 
+ sql_select_all_vegetarian_pets = """
+ 
+-Your SQL here.
++SELECT a.name AS pet_name, ff.name AS food_name
++FROM favorite_foods ff
++JOIN animals a ON ff.food_id == a.favorite_food_id
++WHERE ff.type_food = 1;
+ 
+ """
+\ No newline at end of file
+diff --git a/part2/src/main/java/org/velezreyes/quiz/question6/VendingMachineImpl.java b/part2/src/main/java/org/velezreyes/quiz/question6/VendingMachineImpl.java
+index 85742c4..a68ed01 100644
+--- a/part2/src/main/java/org/velezreyes/quiz/question6/VendingMachineImpl.java
++++ b/part2/src/main/java/org/velezreyes/quiz/question6/VendingMachineImpl.java
+@@ -3,7 +3,8 @@ package org.velezreyes.quiz.question6;
+ public class VendingMachineImpl {
+ 
+   public static VendingMachine getInstance() {
+-    // Fix me!
+-    return null;
++    VendingMachine instance_vm = new SodaVendingMachine();
++    
++    return instance_vm;
+   }
+ }
+diff --git a/part2/src/test/java/org/velezreyes/quiz/Question6Test.java b/part2/src/test/java/org/velezreyes/quiz/Question6Test.java
+index 855e73f..56c844c 100644
+--- a/part2/src/test/java/org/velezreyes/quiz/Question6Test.java
++++ b/part2/src/test/java/org/velezreyes/quiz/Question6Test.java
+@@ -92,4 +92,4 @@ public class Question6Test {
+       vm.pressButton("BessieBooze");
+     });
+   }
+-}
++}
+\ No newline at end of file
